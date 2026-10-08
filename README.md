@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UP Booth Survey (Next.js + Supabase)
 
-## Getting Started
+Mobile-first booth-level social structure survey, plus an admin panel for uploading the booth
+master list (CSV) and viewing a live dashboard.
 
-First, run the development server:
+- `/` — survey form for field workers
+- `/admin/login` — admin sign-in (email + password)
+- `/admin` — dashboard overview
+- `/admin/upload` — booth master CSV upload
+
+## Requirements
+
+- **Node.js 22+** (`nvm use` reads `.nvmrc`) — `@supabase/supabase-js` needs Node 22's native WebSocket.
+- pnpm, and Docker for local Supabase.
+
+## Local setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+npx supabase start                    # local Postgres + Auth in Docker
+npx supabase db reset                 # applies migrations + seed (13 sample booths)
+cp .env.example .env.local            # fill with the keys printed by `supabase start`
+pnpm create-admin admin@local.test 'Admin@12345'
+pnpm dev                              # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Checks: `pnpm test && pnpm lint && pnpm typecheck && pnpm build`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production (hosted Supabase)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a Supabase project, then `npx supabase link --project-ref <ref>` and `npx supabase db push`.
+2. In the dashboard → Authentication → Sign In / Providers: **disable "Allow new users to sign up"**
+   (admins are created only via the script).
+3. Set the three env vars from `.env.example` on the host. `SUPABASE_SECRET_KEY` is server-only.
+4. `pnpm create-admin <email> <password>` with production env loaded.
 
-## Learn More
+## Booth CSV format
 
-To learn more about Next.js, take a look at the following resources:
+```
+district,assembly,booth_number,booth_name,voters
+लखनऊ,लखनऊ मध्य,159,"प्राथमिक विद्यालय, हुसैनगंज",864
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Hindi headers (जिला, विधानसभा, बूथ संख्या, बूथ नाम, मतदाता) also work. Rows are upserted on
+(district, assembly, booth_number): existing booths are updated, new ones added, nothing deleted.
+Invalid and duplicate rows are listed with their line numbers and skipped. Re-uploading a file is safe.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Security model
 
-## Deploy on Vercel
+- All tables have RLS on with **no policies** — browsers can't read or write them with the publishable key.
+- The server uses the secret key only after checks: survey submit re-validates against the DB;
+  admin pages and actions call `requireAdmin()` (verifies the session with Supabase Auth and
+  requires `app_metadata.role = "admin"`, which users cannot set themselves).
+- `src/proxy.ts` refreshes the session and redirects signed-out visitors away from `/admin`.
+- Each booth keeps one submission; re-submitting replaces it atomically (`submit_survey`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+supabase/migrations/            schema, RLS, SQL functions (import_booths, submit_survey, admin_overview)
+src/proxy.ts                    session refresh + /admin gate
+src/lib/supabase/               admin (secret key) and cookie-bound server clients, generated types
+src/features/survey/            public form: components, reducer, validation, repository, submit action
+src/features/admin/
+  auth/                         requireAdmin DAL, sign-in/out actions
+  import/                       CSV rules (shared client/server) + chunked import action
+  data/                         dashboard query
+  components/                   header, login, dashboard, CSV importer
+scripts/create-admin.mjs        create or promote an admin user
+```
+
+Regenerate DB types after schema changes:
+`npx supabase gen types typescript --local > src/lib/supabase/database.types.ts`

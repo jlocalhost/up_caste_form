@@ -1,0 +1,118 @@
+"use client";
+
+import Field, { type ControlProps } from "@/components/ui/Field";
+import Icon from "@/components/ui/Icon";
+import SectionTitle from "@/components/ui/SectionTitle";
+import { controlClass } from "@/components/ui/control-class";
+import { formatBoothLabel, type ResolvedArea } from "../lib/survey-math";
+import type { SurveyErrors } from "../lib/validation";
+
+export type PickerKind = "district" | "assembly" | "booth";
+
+type Props = {
+  area: ResolvedArea;
+  errors: SurveyErrors;
+  onOpenPicker: (kind: PickerKind) => void;
+};
+
+/** Field-styled button that opens a picker sheet. */
+function PickerTrigger({
+  control,
+  invalid,
+  disabled,
+  value,
+  placeholder,
+  onOpen,
+}: {
+  control: ControlProps;
+  invalid?: string;
+  disabled?: boolean;
+  value?: string;
+  placeholder: string;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      {...control}
+      type="button"
+      disabled={disabled}
+      onClick={onOpen}
+      aria-haspopup="dialog"
+      className={`${controlClass(invalid)} flex h-auto min-h-12 items-center justify-between gap-2 text-left disabled:bg-slate-100 disabled:text-slate-400`}
+    >
+      <span className={value ? "leading-5" : "text-slate-400"}>{value ?? placeholder}</span>
+      <Icon name="search" className="size-5 shrink-0 text-slate-400" />
+    </button>
+  );
+}
+
+export default function AreaSection({
+  area: { district, assembly, booth },
+  errors,
+  onOpenPicker,
+}: Props) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <SectionTitle number="1" title="क्षेत्र का विवरण" subtitle="पहले जिला, विधानसभा और बूथ चुनें" />
+      <div className="space-y-4">
+        <Field label="जिला" required error={errors.district}>
+          {(control) => (
+            <PickerTrigger
+              control={control}
+              invalid={errors.district}
+              value={district?.name}
+              placeholder="जिला खोजें या चुनें"
+              onOpen={() => onOpenPicker("district")}
+            />
+          )}
+        </Field>
+
+        <Field label="विधानसभा" required error={errors.assembly}>
+          {(control) => (
+            <PickerTrigger
+              control={control}
+              invalid={errors.assembly}
+              disabled={!district}
+              value={assembly?.name}
+              placeholder={district ? "विधानसभा खोजें या चुनें" : "पहले जिला चुनें"}
+              onOpen={() => onOpenPicker("assembly")}
+            />
+          )}
+        </Field>
+
+        <Field label="बूथ" required error={errors.booth} hint="बूथ चुनने पर मतदाता संख्या स्वतः भर जाएगी">
+          {(control) => (
+            <PickerTrigger
+              control={control}
+              invalid={errors.booth}
+              disabled={!assembly}
+              value={booth && formatBoothLabel(booth)}
+              placeholder={assembly ? "बूथ खोजें या चुनें" : "पहले विधानसभा चुनें"}
+              onOpen={() => onOpenPicker("booth")}
+            />
+          )}
+        </Field>
+
+        <Field label="कुल मतदाता" required hint="बूथ सूची से स्वतः भरा जाता है · बदला नहीं जा सकता">
+          {(control) => (
+            <div className="relative">
+              <input
+                {...control}
+                readOnly
+                tabIndex={-1}
+                value={booth ? String(booth.voters) : ""}
+                placeholder="बूथ चुनने पर स्वतः भरेगा"
+                className="h-12 w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3.5 pr-20 text-[15px] font-semibold text-slate-600 outline-none placeholder:font-normal placeholder:text-slate-400"
+              />
+              {booth && (
+                <span className="absolute top-3 right-3 rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
+                  प्रीफिल
+                </span>
+              )}
+            </div>
+          )}
+        </Field>
+      </div>
+    </section>
+  );
+}
