@@ -1,4 +1,4 @@
-import { OTHER_CASTE } from "../constants";
+import { MIN_COVERAGE_PERCENT, OTHER_CASTE } from "../constants";
 import type { SurveyDraft } from "../types";
 import { casteKey, parseWholeNumber, sumCounts, type ResolvedArea } from "./survey-math";
 
@@ -15,6 +15,7 @@ export type SurveyErrors = {
   booth?: string;
   noCaste?: string;
   overflow?: string;
+  minCoverage?: string;
   rows: RowErrors[];
 };
 
@@ -28,7 +29,14 @@ export const messages = {
   duplicate: "यह जाति पहले जोड़ी जा चुकी है",
   noCaste: "कम से कम एक जाति दर्ज करना आवश्यक है",
   overflow: "जातिवार कुल संख्या, कुल मतदाताओं से अधिक नहीं हो सकती",
+  minCoverage: (needed: number) =>
+    `कम से कम ${MIN_COVERAGE_PERCENT}% मतदाता दर्ज करना आवश्यक है (न्यूनतम ${needed})`,
 } as const;
+
+/** Smallest entered total that meets the coverage rule for a booth. */
+export function minimumEntered(voters: number): number {
+  return Math.ceil((voters * MIN_COVERAGE_PERCENT) / 100);
+}
 
 export function hasRowError(errors: RowErrors): boolean {
   return Boolean(errors.caste || errors.other || errors.count || errors.duplicate);
@@ -63,6 +71,8 @@ export function validateSurvey(draft: SurveyDraft, area: ResolvedArea): SurveyEr
     booth: booth ? undefined : messages.booth,
     noCaste: draft.rows.some((row) => row.caste) ? undefined : messages.noCaste,
     overflow: voters > 0 && entered > voters ? messages.overflow : undefined,
+    minCoverage:
+      voters > 0 && entered < minimumEntered(voters) ? messages.minCoverage(minimumEntered(voters)) : undefined,
     rows,
   };
 }

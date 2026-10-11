@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { CasteRow, SurveyDraft } from "../types";
 import { resolveArea } from "./survey-math";
 import { districtsFixture, lucknowCentralBooth } from "./test-fixtures";
-import { isSurveyValid, messages, validateSurvey } from "./validation";
+import { isSurveyValid, messages, minimumEntered, validateSurvey } from "./validation";
 
 const row = (caste: string, count: string, otherName = ""): CasteRow => ({
   id: `${caste}-${count}-${otherName}`,
@@ -15,7 +15,8 @@ const validDraft = (patch: Partial<SurveyDraft> = {}): SurveyDraft => ({
   districtId: "lucknow",
   assemblyId: "lucknow-central",
   booth: lucknowCentralBooth,
-  rows: [row("यादव", "300"), row("", "")],
+  // 864 voters → 60% minimum is 519.
+  rows: [row("यादव", "600"), row("", "")],
   comment: "",
   ...patch,
 });
@@ -30,6 +31,11 @@ describe("validateSurvey", () => {
   it("rejects a booth that does not belong to the chosen assembly", () => {
     const errors = validate(validDraft({ assemblyId: "lucknow-east" }));
     expect(errors.booth).toBe(messages.booth);
+  });
+
+  it("requires at least 60% of the booth's voters to be entered", () => {
+    expect(validate(validDraft({ rows: [row("यादव", "518")] })).minCoverage).toBe(messages.minCoverage(519));
+    expect(isSurveyValid(validate(validDraft({ rows: [row("यादव", "300"), row("कुर्मी", "219")] })))).toBe(true);
   });
 
   it("takes total voters from the booth, so small or large booths are accepted", () => {
@@ -63,5 +69,16 @@ describe("validateSurvey", () => {
     const errors = validate(validDraft({ rows: [row("यादव", "800"), row("कुर्मी", "100")] }));
     expect(errors.overflow).toBe(messages.overflow);
     expect(isSurveyValid(errors)).toBe(false);
+  });
+});
+
+describe("minimumEntered", () => {
+  it.each([
+    [864, 519],
+    [100, 60],
+    [1, 1],
+    [0, 0],
+  ])("needs %i voters → %i", (voters, needed) => {
+    expect(minimumEntered(voters)).toBe(needed);
   });
 });

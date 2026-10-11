@@ -3,7 +3,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { compareBoothNumbers, type ResolvedArea } from "../lib/survey-math";
-import type { Booth, SurveyConfig } from "../types";
+import type { Booth, CasteCount, DeviceSubmission, ExistingSubmission, SurveyConfig } from "../types";
 
 /** Invalidated whenever booth master data is imported. */
 export const MASTER_DATA_TAG = "master-data";
@@ -84,7 +84,9 @@ export type SubmissionPayload = {
   boothId: string;
   totalVoters: number;
   comment: string;
-  counts: { caste: string; count: number }[];
+  counts: CasteCount[];
+  /** Anonymous per-device id; null when the browser couldn't provide one. */
+  deviceId: string | null;
 };
 
 export async function saveSubmission(payload: SubmissionPayload): Promise<void> {
@@ -93,6 +95,59 @@ export async function saveSubmission(payload: SubmissionPayload): Promise<void> 
     p_total_voters: payload.totalVoters,
     p_comment: payload.comment,
     p_counts: payload.counts,
+    // The generated type marks every arg required; SQL accepts null for an unknown device.
+    p_device_id: payload.deviceId as string,
   });
   if (error) throw error;
+}
+
+const byCountDesc = (a: CasteCount, b: CasteCount) => b.count - a.count;
+
+/** The current submission for a booth, used to prefill the form for editing. Never cached. */
+export async function getSubmissionForBooth(boothId: string): Promise<ExistingSubmission | null> {
+  const { data, error } = await supabaseAdmin()
+    .from("survey_submissions")
+    .select("booth_id, comment, revision, updated_at, survey_caste_counts(caste, count)")
+    .eq("booth_id", boothId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    boothId: data.booth_id,
+    comment: data.comment ?? "",
+    revision: data.revision,
+    updatedAt: data.updated_at,
+    counts: data.survey_caste_counts.map((c) => ({ caste: c.caste, count: c.count })).sort(byCountDesc),
+  };
+}
+
+const MY_SUBMISSIONS_LIMIT = 500;
+
+/** Everything this device submitted (last editor wins), newest first. Never cached. */
+export async function listDeviceSubmissions(deviceId: string): Promise<DeviceSubmission[]> {
+  const { data, error } = await supabaseAdmin()
+    .from("survey_submissions")
+    .select(
+      "comment, revision, updated_at, survey_caste_counts(caste, count), booths(id, assembly_id, number, name, voters, assemblies(id, name, districts(id, name)))",
+    )
+    .eq("device_id", deviceId)
+    .order("updated_at", { ascending: false })
+    .limit(MY_SUBMISSIONS_LIMIT);
+  if (error) throw error;
+
+  return data.map((row) => {
+    const booth = row.booths;
+    const counts = row.survey_caste_counts.map((c) => ({ caste: c.caste, count: c.count })).sort(byCountDesc);
+    return {
+      booth: { id: booth.id, assemblyId: booth.assembly_id, number: booth.number, name: booth.name, voters: booth.voters },
+      assembly: { id: booth.assemblies.id, name: booth.assemblies.name },
+      district: booth.assemblies.districts,
+      comment: row.comment ?? "",
+      revision: row.revision,
+      updatedAt: row.updated_at,
+      counts,
+      entered: counts.reduce((sum, c) => sum + c.count, 0),
+    };
+  });
 }

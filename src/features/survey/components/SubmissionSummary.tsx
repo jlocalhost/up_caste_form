@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
 import { casteLabel, formatBoothLabel, formatPercent, parseWholeNumber, type ResolvedArea } from "../lib/survey-math";
@@ -104,6 +105,12 @@ export default function SubmissionSummary({
       <p className="mt-2 text-center text-[11px] leading-5 text-slate-500">
         जिला और विधानसभा वही रहेंगे, केवल नया बूथ चुनना होगा।
       </p>
+      <Link
+        href="/my-submissions"
+        className="mt-3 flex min-h-12 w-full items-center justify-center rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50"
+      >
+        मेरे सबमिशन देखें
+      </Link>
     </section>
   );
 }

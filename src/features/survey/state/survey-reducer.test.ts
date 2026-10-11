@@ -48,4 +48,21 @@ describe("surveyReducer", () => {
     expect(state.draft).toMatchObject({ districtId: lucknow.id, assemblyId: central.id, booth: null });
     expect(state.submitted).toBe(false);
   });
+
+  it("loads a saved submission for editing and falls back to one empty row", () => {
+    const savedRow = { id: "s1", caste: "यादव", otherName: "", count: "600" };
+    const loaded = run({
+      type: "loadSubmission",
+      districtId: lucknow.id,
+      assemblyId: central.id,
+      booth,
+      rows: [savedRow],
+      comment: "पुरानी टिप्पणी",
+    });
+    expect(loaded.draft).toMatchObject({ booth, rows: [savedRow], comment: "पुरानी टिप्पणी" });
+
+    const fresh = run({ type: "loadSubmission", districtId: lucknow.id, assemblyId: central.id, booth, rows: [], comment: "" });
+    expect(fresh.draft.rows).toHaveLength(1);
+    expect(fresh.draft.rows[0]).toMatchObject({ caste: "", count: "" });
+  });
 });

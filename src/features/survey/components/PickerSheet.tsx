@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import { controlClass } from "@/components/ui/control-class";
+import { matchesSearch } from "../lib/format";
 
 export type PickerOption = {
   id: string;
@@ -41,8 +42,7 @@ export default function PickerSheet({
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const titleId = useId();
-  const query = search.trim();
-  const visible = query ? options.filter((o) => o.label.includes(query)) : options;
+  const visible = options.filter((o) => matchesSearch(o.label, search));
 
   // Escape closes, background stops scrolling, and focus returns to the trigger afterwards.
   useEffect(() => {

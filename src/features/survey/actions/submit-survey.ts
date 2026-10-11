@@ -1,6 +1,6 @@
 "use server";
 
-import { resolveAreaFromDb, saveSubmission } from "../data/survey-repository";
+import { isUuid, resolveAreaFromDb, saveSubmission } from "../data/survey-repository";
 import { casteLabel, isActiveRow, parseWholeNumber } from "../lib/survey-math";
 import { isSurveyValid, validateSurvey } from "../lib/validation";
 import type { SurveyDraft } from "../types";
@@ -8,7 +8,7 @@ import type { SurveyDraft } from "../types";
 export type SubmitResult = { ok: true } | { ok: false; message: string };
 
 /** Server-side gate: never trust the client — re-resolve the booth from the DB and re-validate. */
-export async function submitSurvey(input: SurveyDraft): Promise<SubmitResult> {
+export async function submitSurvey(input: SurveyDraft, deviceId: string | null): Promise<SubmitResult> {
   if (!isDraftShape(input)) return { ok: false, message: "अमान्य अनुरोध" };
   const draft: SurveyDraft = { ...input, rows: input.rows.filter(isActiveRow) };
   const area = await resolveAreaFromDb(draft.booth?.id);
@@ -25,6 +25,7 @@ export async function submitSurvey(input: SurveyDraft): Promise<SubmitResult> {
       totalVoters: area.booth!.voters,
       comment: draft.comment.slice(0, 1000),
       counts: draft.rows.map((row) => ({ caste: casteLabel(row), count: parseWholeNumber(row.count)! })),
+      deviceId: isUuid(deviceId) ? deviceId : null,
     });
   } catch (error) {
     console.error("submitSurvey failed", error);

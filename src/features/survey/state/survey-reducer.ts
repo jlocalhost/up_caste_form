@@ -22,7 +22,15 @@ export type SurveyAction =
   | { type: "markSubmitted" }
   | { type: "reset"; rows: CasteRow[] }
   | { type: "startAnotherBooth"; rows: CasteRow[] }
-  | { type: "restoreDraft"; draft: SurveyDraft };
+  | { type: "restoreDraft"; draft: SurveyDraft }
+  | {
+      type: "loadSubmission";
+      districtId: string;
+      assemblyId: string;
+      booth: Booth;
+      rows: CasteRow[];
+      comment: string;
+    };
 
 let idSeed = 0;
 /**
@@ -98,6 +106,18 @@ export function surveyReducer(state: SurveyState, action: SurveyAction): SurveyS
           ...emptyDraft(action.rows),
           districtId: state.draft.districtId,
           assemblyId: state.draft.assemblyId,
+        },
+      };
+    case "loadSubmission":
+      return {
+        touched: false,
+        submitted: false,
+        draft: {
+          districtId: action.districtId,
+          assemblyId: action.assemblyId,
+          booth: action.booth,
+          rows: action.rows.length ? action.rows : initialRows(),
+          comment: action.comment,
         },
       };
     case "restoreDraft":

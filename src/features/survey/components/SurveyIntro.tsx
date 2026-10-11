@@ -1,7 +1,8 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import Icon from "@/components/ui/Icon";
 
-export function SurveyHeader() {
+export function SurveyHeader({ action }: { action?: ReactNode }) {
   return (
     <header className="relative overflow-hidden bg-orange-600 px-5 pt-5 pb-7 text-white">
       <div className="absolute -top-14 -right-9 size-36 rounded-full border-[20px] border-white/10" />
@@ -10,10 +11,11 @@ export function SurveyHeader() {
           {/* The artwork is a centred circle on a 16:9 canvas; cover crops the empty sides. */}
           <Image src="/BJP-Symbol.png" alt="" fill sizes="44px" loading="eager" className="object-cover" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-base font-extrabold tracking-tight">भारतीय जनता पार्टी</p>
           <p className="mt-0.5 text-xs font-medium text-orange-100">सामाजिक संरचना सर्वेक्षण प्रपत्र | उत्तर प्रदेश</p>
         </div>
+        {action && <div className="shrink-0">{action}</div>}
       </div>
     </header>
   );

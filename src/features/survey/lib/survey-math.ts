@@ -1,5 +1,5 @@
 import { OTHER_CASTE } from "../constants";
-import type { Assembly, Booth, CasteRow, District, SurveyDraft } from "../types";
+import type { Assembly, Booth, CasteCount, CasteRow, District, SurveyDraft } from "../types";
 
 /** Natural order for booth numbers stored as text ("2" before "10", "12A" after "12"). */
 export function compareBoothNumbers(a: string, b: string): number {
@@ -60,4 +60,18 @@ export function resolveArea(
   const assembly = district?.assemblies.find((a) => a.id === draft.assemblyId);
   const booth = assembly && draft.booth?.assemblyId === assembly.id ? draft.booth : undefined;
   return { district, assembly, booth };
+}
+
+/**
+ * Turns saved counts back into editable rows: known castes map to their option,
+ * anything else becomes "other" with the saved name.
+ */
+export function rowsFromCounts(counts: CasteCount[], castes: string[], makeId: (index: number) => string): CasteRow[] {
+  const known = new Set(castes.filter((c) => c !== OTHER_CASTE));
+  return counts.map((c, index) => ({
+    id: makeId(index),
+    caste: known.has(c.caste) ? c.caste : OTHER_CASTE,
+    otherName: known.has(c.caste) ? "" : c.caste,
+    count: String(c.count),
+  }));
 }
