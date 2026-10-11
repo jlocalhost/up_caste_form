@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import Field from "@/components/ui/Field";
 import Icon from "@/components/ui/Icon";
 import { controlClass } from "@/components/ui/control-class";
@@ -8,18 +9,33 @@ import { formatPercent, parseWholeNumber } from "../lib/survey-math";
 import { hasRowError, type RowErrors } from "../lib/validation";
 import type { RowField } from "../state/survey-reducer";
 import type { CasteRow } from "../types";
+import PickerSheet from "./PickerSheet";
+import PickerTrigger from "./PickerTrigger";
 
 type Props = {
   index: number;
   row: CasteRow;
   errors: RowErrors;
   castes: string[];
+  /** Castes already picked in other rows of this form. */
+  usedElsewhere: Set<string>;
   totalVoters: number;
   onChange: (field: RowField, value: string) => void;
   onRemove: () => void;
 };
 
-export default function CasteRowCard({ index, row, errors, castes, totalVoters, onChange, onRemove }: Props) {
+export default function CasteRowCard({
+  index,
+  row,
+  errors,
+  castes,
+  usedElsewhere,
+  totalVoters,
+  onChange,
+  onRemove,
+}: Props) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const closePicker = useCallback(() => setPickerOpen(false), []);
   const percentage = formatPercent(parseWholeNumber(row.count) ?? 0, totalVoters);
   const casteError = errors.caste || errors.duplicate;
 
@@ -48,22 +64,34 @@ export default function CasteRowCard({ index, row, errors, castes, totalVoters, 
       <div className="space-y-3">
         <Field label="जाति" error={casteError}>
           {(control) => (
-            <div className="relative">
-              <select
-                {...control}
-                value={row.caste}
-                onChange={(e) => onChange("caste", e.target.value)}
-                className={`${controlClass(casteError)} appearance-none pr-10`}
-              >
-                <option value="">जाति चुनें</option>
-                {castes.map((caste) => (
-                  <option key={caste}>{caste}</option>
-                ))}
-              </select>
-              <Icon name="chevron" className="pointer-events-none absolute top-3.5 right-3.5 size-5 text-slate-400" />
-            </div>
+            <PickerTrigger
+              control={control}
+              invalid={casteError}
+              value={row.caste || undefined}
+              placeholder="जाति खोजें या चुनें"
+              onOpen={() => setPickerOpen(true)}
+            />
           )}
         </Field>
+        {pickerOpen && (
+          <PickerSheet
+            title="जाति चुनें"
+            subtitle={`जाति विवरण ${index + 1}`}
+            searchPlaceholder="जाति खोजें"
+            emptyText="कोई जाति नहीं मिली — सूची में न हो तो “अन्य” चुनें"
+            options={castes.map((caste) => ({
+              id: caste,
+              label: caste,
+              detail: caste !== OTHER_CASTE && usedElsewhere.has(caste) ? "इस फ़ॉर्म में पहले से जोड़ी गई" : undefined,
+            }))}
+            selectedId={row.caste}
+            onSelect={(caste) => {
+              onChange("caste", caste);
+              setPickerOpen(false);
+            }}
+            onClose={closePicker}
+          />
+        )}
         {row.caste === OTHER_CASTE && (
           <Field label="अन्य जाति का नाम" required error={errors.other}>
             {(control) => (

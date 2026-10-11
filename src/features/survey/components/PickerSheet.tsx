@@ -64,7 +64,7 @@ export default function PickerSheet({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/45 px-0 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-950/45 px-0 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}

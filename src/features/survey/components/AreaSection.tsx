@@ -1,11 +1,10 @@
 "use client";
 
-import Field, { type ControlProps } from "@/components/ui/Field";
-import Icon from "@/components/ui/Icon";
+import Field from "@/components/ui/Field";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { controlClass } from "@/components/ui/control-class";
 import { formatBoothLabel, type ResolvedArea } from "../lib/survey-math";
 import type { SurveyErrors } from "../lib/validation";
+import PickerTrigger from "./PickerTrigger";
 
 export type PickerKind = "district" | "assembly" | "booth";
 
@@ -14,37 +13,6 @@ type Props = {
   errors: SurveyErrors;
   onOpenPicker: (kind: PickerKind) => void;
 };
-
-/** Field-styled button that opens a picker sheet. */
-function PickerTrigger({
-  control,
-  invalid,
-  disabled,
-  value,
-  placeholder,
-  onOpen,
-}: {
-  control: ControlProps;
-  invalid?: string;
-  disabled?: boolean;
-  value?: string;
-  placeholder: string;
-  onOpen: () => void;
-}) {
-  return (
-    <button
-      {...control}
-      type="button"
-      disabled={disabled}
-      onClick={onOpen}
-      aria-haspopup="dialog"
-      className={`${controlClass(invalid)} flex h-auto min-h-12 items-center justify-between gap-2 text-left disabled:bg-slate-100 disabled:text-slate-400`}
-    >
-      <span className={value ? "leading-5" : "text-slate-400"}>{value ?? placeholder}</span>
-      <Icon name="search" className="size-5 shrink-0 text-slate-400" />
-    </button>
-  );
-}
 
 export default function AreaSection({
   area: { district, assembly, booth },

@@ -46,6 +46,7 @@ export default function CasteSection({
             row={row}
             errors={errors.rows[index] ?? {}}
             castes={castes}
+            usedElsewhere={new Set(rows.filter((other) => other.id !== row.id && other.caste).map((other) => other.caste))}
             totalVoters={totalVoters}
             onChange={(field, value) => onRowChange(row.id, field, value)}
             onRemove={() => onRowRemove(row.id)}
