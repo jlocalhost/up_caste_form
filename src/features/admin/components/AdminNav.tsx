@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/admin", label: "डैशबोर्ड" },
   { href: "/admin/upload", label: "बूथ CSV अपलोड" },
+  { href: "/admin/export", label: "रिस्पॉन्स डाउनलोड" },
 ] as const;
 
 export default function AdminNav() {

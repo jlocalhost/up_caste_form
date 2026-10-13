@@ -12,13 +12,20 @@ export function isAdminRole(appMetadata: Record<string, unknown> | undefined): b
   return appMetadata?.role === "admin";
 }
 
-/**
- * Data Access Layer gate. Verifies the session with Supabase Auth (not just the cookie)
- * and requires the admin role. Call it in every admin page and server action.
- */
-export async function requireAdmin(): Promise<AdminUser> {
+/** The signed-in admin, verified with Supabase Auth (not just the cookie), or null. */
+export async function getAdminUser(): Promise<AdminUser | null> {
   const supabase = await supabaseServer();
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user || !isAdminRole(data.user.app_metadata)) redirect(LOGIN_PATH);
+  if (error || !data.user || !isAdminRole(data.user.app_metadata)) return null;
   return { id: data.user.id, email: data.user.email ?? "" };
+}
+
+/**
+ * Data Access Layer gate: requires the admin role, otherwise redirects to login.
+ * Call it in every admin page, server action and route handler.
+ */
+export async function requireAdmin(): Promise<AdminUser> {
+  const admin = await getAdminUser();
+  if (!admin) redirect(LOGIN_PATH);
+  return admin;
 }

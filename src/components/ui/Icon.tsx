@@ -10,6 +10,7 @@ const paths = {
   ),
   trash: <path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  download: <path d="M12 4v11m-5-5 5 5 5-5M5 20h14" />,
   check: <path d="m5 12 4 4L19 6" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   info: (

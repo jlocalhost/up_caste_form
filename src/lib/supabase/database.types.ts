@@ -140,6 +140,11 @@ isOneToOne: true
             "admin_overview":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"export_assemblies":
+{ Args: { "p_assembly_id"?: string,"p_district_id"?: string }; Returns: {
+              "assembly_id": string,"assembly_name": string,"district_name": string,"submissions": number
+            }[]
+                           },
 "import_booths":
 { Args: { "p_rows": Json }; Returns: Json
                            },
