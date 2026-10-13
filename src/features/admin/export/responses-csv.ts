@@ -3,6 +3,9 @@ import type { CasteCount } from "@/features/survey/types";
 
 /** One submitted booth, flattened for export. */
 export type ResponseRow = {
+  submissionId: string;
+  /** ISO timestamp of the latest submit — the counts in the row are from that submit. */
+  submittedAt: string;
   district: string;
   assembly: string;
   boothNumber: string;
@@ -12,6 +15,8 @@ export type ResponseRow = {
 };
 
 export const RESPONSE_HEADERS = [
+  "Submission ID",
+  "Submission Date Time (IST)",
   "District",
   "AC Name",
   "Booth Number",
@@ -19,6 +24,23 @@ export const RESPONSE_HEADERS = [
   "Total Voters",
   "Caste wise count",
 ] as const;
+
+const istParts = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Kolkata",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+
+/** "2026-10-13 15:42:07" in IST — sortable, and Excel reads it as a date-time. */
+export function formatIstDateTime(iso: string): string {
+  const p = Object.fromEntries(istParts.formatToParts(new Date(iso)).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}`;
+}
 
 /** "यादव: 300 (34.7%); ब्राह्मण: 120 (13.9%)" — largest first, % of the booth's total voters. */
 export function formatCasteBreakdown(counts: CasteCount[], totalVoters: number): string {
@@ -44,6 +66,8 @@ export function csvLine(cells: (string | number)[]): string {
 
 export function responseCells(row: ResponseRow): (string | number)[] {
   return [
+    row.submissionId,
+    formatIstDateTime(row.submittedAt),
     row.district,
     row.assembly,
     row.boothNumber,

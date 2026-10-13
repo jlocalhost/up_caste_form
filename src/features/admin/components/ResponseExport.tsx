@@ -8,7 +8,16 @@ import { RESPONSE_HEADERS } from "../export/responses-csv";
 
 const DOWNLOAD_PATH = "/admin/export/download";
 
-const sampleRow = ["लखनऊ", "लखनऊ मध्य", "159", "प्राथमिक विद्यालय, हुसैनगंज", "864", "यादव: 300 (34.7%); ब्राह्मण: 120 (13.9%); …"];
+const sampleRow = [
+  "3f2a9c1e-…",
+  "2026-10-13 15:42:07",
+  "लखनऊ",
+  "लखनऊ मध्य",
+  "159",
+  "प्राथमिक विद्यालय, हुसैनगंज",
+  "864",
+  "यादव: 300 (34.7%); ब्राह्मण: 120 (13.9%); …",
+];
 
 /** Pick a scope (all / district / assembly) and download submitted responses as CSV. */
 export default function ResponseExport({ districts }: { districts: District[] }) {

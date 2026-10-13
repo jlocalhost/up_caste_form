@@ -1,6 +1,13 @@
 import Papa from "papaparse";
 import { describe, expect, it } from "vitest";
-import { RESPONSE_HEADERS, csvLine, escapeCsvCell, formatCasteBreakdown, responseCells } from "./responses-csv";
+import {
+  RESPONSE_HEADERS,
+  csvLine,
+  escapeCsvCell,
+  formatCasteBreakdown,
+  formatIstDateTime,
+  responseCells,
+} from "./responses-csv";
 
 describe("formatCasteBreakdown", () => {
   it("lists castes largest first with % of total voters", () => {
@@ -33,6 +40,8 @@ describe("escapeCsvCell", () => {
 describe("csvLine / responseCells", () => {
   it("round-trips through a CSV parser", () => {
     const row = {
+      submissionId: "3f2a9c1e-0000-4000-8000-000000000001",
+      submittedAt: "2026-10-13T10:12:07.123+00:00",
       district: "लखनऊ",
       assembly: "लखनऊ मध्य",
       boothNumber: "159",
@@ -47,6 +56,8 @@ describe("csvLine / responseCells", () => {
     const { data } = Papa.parse<string[]>(csv.trim());
     expect(data[0]).toEqual([...RESPONSE_HEADERS]);
     expect(data[1]).toEqual([
+      "3f2a9c1e-0000-4000-8000-000000000001",
+      "2026-10-13 15:42:07",
       "लखनऊ",
       "लखनऊ मध्य",
       "159",
@@ -54,5 +65,12 @@ describe("csvLine / responseCells", () => {
       "864",
       "यादव: 300 (34.7%); =evil: 20 (2.3%)",
     ]);
+  });
+});
+
+describe("formatIstDateTime", () => {
+  it("converts UTC to IST in a sortable 24-hour format", () => {
+    expect(formatIstDateTime("2026-10-13T10:12:07Z")).toBe("2026-10-13 15:42:07");
+    expect(formatIstDateTime("2026-10-13T19:00:00Z")).toBe("2026-10-14 00:30:00");
   });
 });
