@@ -42,6 +42,8 @@ describe("csvLine / responseCells", () => {
     const row = {
       submissionId: "3f2a9c1e-0000-4000-8000-000000000001",
       submittedAt: "2026-10-13T10:12:07.123+00:00",
+      submitterName: "राम कुमार",
+      submitterPhone: "9876543210",
       district: "लखनऊ",
       assembly: "लखनऊ मध्य",
       boothNumber: "159",
@@ -58,6 +60,8 @@ describe("csvLine / responseCells", () => {
     expect(data[1]).toEqual([
       "3f2a9c1e-0000-4000-8000-000000000001",
       "2026-10-13 15:42:07",
+      "राम कुमार",
+      "9876543210",
       "लखनऊ",
       "लखनऊ मध्य",
       "159",

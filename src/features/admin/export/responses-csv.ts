@@ -6,6 +6,9 @@ export type ResponseRow = {
   submissionId: string;
   /** ISO timestamp of the latest submit — the counts in the row are from that submit. */
   submittedAt: string;
+  /** Empty for submissions made before these fields existed. */
+  submitterName: string;
+  submitterPhone: string;
   district: string;
   assembly: string;
   boothNumber: string;
@@ -17,6 +20,8 @@ export type ResponseRow = {
 export const RESPONSE_HEADERS = [
   "Submission ID",
   "Submission Date Time (IST)",
+  "User Name",
+  "User Phone",
   "District",
   "AC Name",
   "Booth Number",
@@ -68,6 +73,8 @@ export function responseCells(row: ResponseRow): (string | number)[] {
   return [
     row.submissionId,
     formatIstDateTime(row.submittedAt),
+    row.submitterName,
+    row.submitterPhone,
     row.district,
     row.assembly,
     row.boothNumber,

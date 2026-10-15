@@ -87,6 +87,9 @@ export type SubmissionPayload = {
   counts: CasteCount[];
   /** Anonymous per-device id; null when the browser couldn't provide one. */
   deviceId: string | null;
+  submitterName: string;
+  /** Normalised 10-digit mobile number. */
+  submitterPhone: string;
 };
 
 export async function saveSubmission(payload: SubmissionPayload): Promise<void> {
@@ -97,6 +100,8 @@ export async function saveSubmission(payload: SubmissionPayload): Promise<void> 
     p_counts: payload.counts,
     // The generated type marks every arg required; SQL accepts null for an unknown device.
     p_device_id: payload.deviceId as string,
+    p_submitter_name: payload.submitterName,
+    p_submitter_phone: payload.submitterPhone,
   });
   if (error) throw error;
 }

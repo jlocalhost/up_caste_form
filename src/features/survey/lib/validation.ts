@@ -1,5 +1,6 @@
 import { MIN_COVERAGE_PERCENT, OTHER_CASTE } from "../constants";
 import type { SurveyDraft } from "../types";
+import { isValidName, isValidPhone } from "./submitter";
 import { casteKey, parseWholeNumber, sumCounts, type ResolvedArea } from "./survey-math";
 
 export type RowErrors = {
@@ -10,6 +11,8 @@ export type RowErrors = {
 };
 
 export type SurveyErrors = {
+  submitterName?: string;
+  submitterPhone?: string;
   district?: string;
   assembly?: string;
   booth?: string;
@@ -20,6 +23,10 @@ export type SurveyErrors = {
 };
 
 export const messages = {
+  submitterNameMissing: "अपना नाम लिखना आवश्यक है",
+  submitterName: "सही नाम लिखें — केवल अक्षर, कम से कम 2",
+  submitterPhoneMissing: "मोबाइल नंबर आवश्यक है",
+  submitterPhone: "सही 10 अंकों का मोबाइल नंबर दर्ज करें (6, 7, 8 या 9 से शुरू)",
   district: "जिला चुनना आवश्यक है",
   assembly: "विधानसभा चुनना आवश्यक है",
   booth: "बूथ चुनना आवश्यक है",
@@ -66,6 +73,16 @@ export function validateSurvey(draft: SurveyDraft, area: ResolvedArea): SurveyEr
   });
 
   return {
+    submitterName: !draft.submitterName.trim()
+      ? messages.submitterNameMissing
+      : isValidName(draft.submitterName)
+        ? undefined
+        : messages.submitterName,
+    submitterPhone: !draft.submitterPhone
+      ? messages.submitterPhoneMissing
+      : isValidPhone(draft.submitterPhone)
+        ? undefined
+        : messages.submitterPhone,
     district: district ? undefined : messages.district,
     assembly: assembly ? undefined : messages.assembly,
     booth: booth ? undefined : messages.booth,

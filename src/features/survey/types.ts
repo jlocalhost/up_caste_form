@@ -39,6 +39,10 @@ export type SurveyDraft = {
   booth: Booth | null;
   rows: CasteRow[];
   comment: string;
+  /** Person filling the form; kept across booths on this device. */
+  submitterName: string;
+  /** Normalised 10-digit mobile number. */
+  submitterPhone: string;
 };
 
 export type CasteCount = { caste: string; count: number };

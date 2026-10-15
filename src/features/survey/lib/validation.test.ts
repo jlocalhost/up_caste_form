@@ -18,6 +18,8 @@ const validDraft = (patch: Partial<SurveyDraft> = {}): SurveyDraft => ({
   // 864 voters → 60% minimum is 519.
   rows: [row("यादव", "600"), row("", "")],
   comment: "",
+  submitterName: "राम कुमार",
+  submitterPhone: "9876543210",
   ...patch,
 });
 
@@ -26,6 +28,17 @@ const validate = (draft: SurveyDraft) => validateSurvey(draft, resolveArea(distr
 describe("validateSurvey", () => {
   it("accepts a complete draft and ignores untouched rows", () => {
     expect(isSurveyValid(validate(validDraft()))).toBe(true);
+  });
+
+  it("requires the submitter's name and a valid mobile number", () => {
+    const missing = validate(validDraft({ submitterName: " ", submitterPhone: "" }));
+    expect(missing.submitterName).toBe(messages.submitterNameMissing);
+    expect(missing.submitterPhone).toBe(messages.submitterPhoneMissing);
+
+    const invalid = validate(validDraft({ submitterName: "Ram123", submitterPhone: "5876543210" }));
+    expect(invalid.submitterName).toBe(messages.submitterName);
+    expect(invalid.submitterPhone).toBe(messages.submitterPhone);
+    expect(isSurveyValid(invalid)).toBe(false);
   });
 
   it("rejects a booth that does not belong to the chosen assembly", () => {

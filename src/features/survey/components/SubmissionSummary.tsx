@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
+import { formatPhone } from "../lib/submitter";
 import { casteLabel, formatBoothLabel, formatPercent, parseWholeNumber, type ResolvedArea } from "../lib/survey-math";
 import type { CasteRow } from "../types";
 
@@ -11,6 +12,8 @@ type Props = {
   coverage: number;
   rows: CasteRow[];
   comment: string;
+  submitterName: string;
+  submitterPhone: string;
   onStartAnotherBooth: () => void;
 };
 
@@ -21,6 +24,8 @@ export default function SubmissionSummary({
   coverage,
   rows,
   comment,
+  submitterName,
+  submitterPhone,
   onStartAnotherBooth,
 }: Props) {
   const filledRows = rows.filter((row) => row.caste && parseWholeNumber(row.count));
@@ -54,6 +59,12 @@ export default function SubmissionSummary({
           <div className="flex justify-between gap-4">
             <dt className="shrink-0 text-slate-500">बूथ</dt>
             <dd className="text-right leading-5 font-bold text-slate-800">{booth && formatBoothLabel(booth)}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="shrink-0 text-slate-500">भरने वाला</dt>
+            <dd className="text-right leading-5 font-bold text-slate-800">
+              {submitterName} · +91 {formatPhone(submitterPhone)}
+            </dd>
           </div>
         </dl>
         <div className="my-4 h-px bg-slate-200" />

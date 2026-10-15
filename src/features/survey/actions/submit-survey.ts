@@ -1,6 +1,7 @@
 "use server";
 
 import { isUuid, resolveAreaFromDb, saveSubmission } from "../data/survey-repository";
+import { cleanName, normalizePhone, SUBMITTER_NAME_MAX } from "../lib/submitter";
 import { casteLabel, isActiveRow, parseWholeNumber } from "../lib/survey-math";
 import { isSurveyValid, validateSurvey } from "../lib/validation";
 import type { SurveyDraft } from "../types";
@@ -10,7 +11,12 @@ export type SubmitResult = { ok: true } | { ok: false; message: string };
 /** Server-side gate: never trust the client — re-resolve the booth from the DB and re-validate. */
 export async function submitSurvey(input: SurveyDraft, deviceId: string | null): Promise<SubmitResult> {
   if (!isDraftShape(input)) return { ok: false, message: "अमान्य अनुरोध" };
-  const draft: SurveyDraft = { ...input, rows: input.rows.filter(isActiveRow) };
+  const draft: SurveyDraft = {
+    ...input,
+    rows: input.rows.filter(isActiveRow),
+    submitterName: cleanName(input.submitterName),
+    submitterPhone: normalizePhone(input.submitterPhone),
+  };
   const area = await resolveAreaFromDb(draft.booth?.id);
 
   // The booth must belong to the assembly and district the worker picked.
@@ -26,6 +32,8 @@ export async function submitSurvey(input: SurveyDraft, deviceId: string | null):
       comment: draft.comment.slice(0, 1000),
       counts: draft.rows.map((row) => ({ caste: casteLabel(row), count: parseWholeNumber(row.count)! })),
       deviceId: isUuid(deviceId) ? deviceId : null,
+      submitterName: draft.submitterName,
+      submitterPhone: draft.submitterPhone,
     });
   } catch (error) {
     console.error("submitSurvey failed", error);
@@ -45,6 +53,10 @@ function isDraftShape(value: unknown): value is SurveyDraft {
     isText(d.districtId) &&
     isText(d.assemblyId) &&
     isText(d.comment) &&
+    isText(d.submitterName) &&
+    d.submitterName.length <= SUBMITTER_NAME_MAX * 2 &&
+    isText(d.submitterPhone) &&
+    d.submitterPhone.length <= 20 &&
     Array.isArray(d.rows) &&
     d.rows.length <= 100 &&
     d.rows.every((r) => r && isText(r.id) && isText(r.caste) && isText(r.otherName) && isText(r.count))

@@ -10,6 +10,12 @@ export type SurveyState = {
 
 export type RowField = "caste" | "otherName" | "count";
 
+export type SubmitterField = "submitterName" | "submitterPhone";
+
+type Submitter = Pick<SurveyDraft, SubmitterField>;
+
+const noSubmitter: Submitter = { submitterName: "", submitterPhone: "" };
+
 export type SurveyAction =
   | { type: "selectDistrict"; districtId: string }
   | { type: "selectAssembly"; assemblyId: string }
@@ -18,6 +24,7 @@ export type SurveyAction =
   | { type: "addRow"; row: CasteRow }
   | { type: "removeRow"; rowId: string }
   | { type: "setComment"; value: string }
+  | { type: "setSubmitter"; field: SubmitterField; value: string }
   | { type: "markTouched" }
   | { type: "markSubmitted" }
   | { type: "reset"; rows: CasteRow[] }
@@ -51,12 +58,25 @@ export function initialRows(): CasteRow[] {
   return Array.from({ length: INITIAL_ROW_COUNT }, (_, index) => emptyRow(`row-initial-${index}`));
 }
 
-export function emptyDraft(rows: CasteRow[]): SurveyDraft {
-  return { districtId: "", assemblyId: "", booth: null, rows, comment: "" };
+export function emptyDraft(rows: CasteRow[], submitter: Submitter = noSubmitter): SurveyDraft {
+  return {
+    districtId: "",
+    assemblyId: "",
+    booth: null,
+    rows,
+    comment: "",
+    submitterName: submitter.submitterName,
+    submitterPhone: submitter.submitterPhone,
+  };
 }
 
 export function createInitialState(rows: CasteRow[] = initialRows()): SurveyState {
   return { draft: emptyDraft(rows), touched: false, submitted: false };
+}
+
+/** The worker's name and number survive clearing the form and moving to the next booth. */
+function submitterOf(draft: SurveyDraft): Submitter {
+  return { submitterName: draft.submitterName, submitterPhone: draft.submitterPhone };
 }
 
 function withDraft(state: SurveyState, patch: Partial<SurveyDraft>): SurveyState {
@@ -92,18 +112,20 @@ export function surveyReducer(state: SurveyState, action: SurveyAction): SurveyS
       return withDraft(state, { rows: state.draft.rows.filter((row) => row.id !== action.rowId) });
     case "setComment":
       return withDraft(state, { comment: action.value });
+    case "setSubmitter":
+      return withDraft(state, { [action.field]: action.value });
     case "markTouched":
       return { ...state, touched: true };
     case "markSubmitted":
       return { ...state, submitted: true };
     case "reset":
-      return createInitialState(action.rows);
+      return { touched: false, submitted: false, draft: emptyDraft(action.rows, submitterOf(state.draft)) };
     case "startAnotherBooth":
       return {
         touched: false,
         submitted: false,
         draft: {
-          ...emptyDraft(action.rows),
+          ...emptyDraft(action.rows, submitterOf(state.draft)),
           districtId: state.draft.districtId,
           assemblyId: state.draft.assemblyId,
         },
@@ -118,9 +140,12 @@ export function surveyReducer(state: SurveyState, action: SurveyAction): SurveyS
           booth: action.booth,
           rows: action.rows.length ? action.rows : initialRows(),
           comment: action.comment,
+          // Editing a saved booth records the current worker, not whoever submitted it before.
+          ...submitterOf(state.draft),
         },
       };
     case "restoreDraft":
-      return { ...state, draft: action.draft };
+      // Drafts saved before the submitter fields existed lack them.
+      return { ...state, draft: { ...noSubmitter, ...action.draft } };
   }
 }

@@ -65,4 +65,31 @@ describe("surveyReducer", () => {
     expect(fresh.draft.rows).toHaveLength(1);
     expect(fresh.draft.rows[0]).toMatchObject({ caste: "", count: "" });
   });
+
+  it("keeps the submitter across clearing the form, the next booth and editing a saved booth", () => {
+    const named: SurveyAction[] = [
+      ...filled,
+      { type: "setSubmitter", field: "submitterName", value: "राम कुमार" },
+      { type: "setSubmitter", field: "submitterPhone", value: "9876543210" },
+    ];
+    const submitter = { submitterName: "राम कुमार", submitterPhone: "9876543210" };
+
+    expect(run(...named, { type: "reset", rows: [emptyRow("r2")] }).draft).toMatchObject({ booth: null, ...submitter });
+    expect(run(...named, { type: "startAnotherBooth", rows: [emptyRow("r2")] }).draft).toMatchObject(submitter);
+    const edited = run(...named, {
+      type: "loadSubmission",
+      districtId: lucknow.id,
+      assemblyId: central.id,
+      booth,
+      rows: [],
+      comment: "",
+    });
+    expect(edited.draft).toMatchObject(submitter);
+  });
+
+  it("fills missing submitter fields when restoring an older saved draft", () => {
+    const oldDraft = { districtId: "", assemblyId: "", booth: null, rows: [emptyRow("r9")], comment: "" };
+    const state = run({ type: "restoreDraft", draft: oldDraft as never });
+    expect(state.draft).toMatchObject({ submitterName: "", submitterPhone: "" });
+  });
 });

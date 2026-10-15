@@ -48,7 +48,7 @@ export async function listBatchResponses(batch: ExportAssembly[]): Promise<Respo
   for (let from = 0; ; from += EXPORT_PAGE_SIZE) {
     const { data, error } = await supabaseAdmin()
       .from("booths")
-      .select("id, assembly_id, number, name, survey_submissions!inner(id, updated_at, total_voters, survey_caste_counts(caste, count))")
+      .select("id, assembly_id, number, name, survey_submissions!inner(id, updated_at, total_voters, submitter_name, submitter_phone, survey_caste_counts(caste, count))")
       .in("assembly_id", [...order.keys()])
       .order("id")
       .range(from, from + EXPORT_PAGE_SIZE - 1);
@@ -62,6 +62,8 @@ export async function listBatchResponses(batch: ExportAssembly[]): Promise<Respo
         row: {
           submissionId: submission.id,
           submittedAt: submission.updated_at,
+          submitterName: submission.submitter_name ?? "",
+          submitterPhone: submission.submitter_phone ?? "",
           district: assembly.district,
           assembly: assembly.name,
           boothNumber: booth.number,

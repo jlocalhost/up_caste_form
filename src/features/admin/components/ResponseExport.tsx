@@ -11,6 +11,8 @@ const DOWNLOAD_PATH = "/admin/export/download";
 const sampleRow = [
   "3f2a9c1e-…",
   "2026-10-13 15:42:07",
+  "राम कुमार",
+  "9876543210",
   "लखनऊ",
   "लखनऊ मध्य",
   "159",

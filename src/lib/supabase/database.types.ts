@@ -113,14 +113,14 @@ isOneToOne: false
                   ]
                 },"survey_submissions": {
                   Row: {
-                    "booth_id": string,"comment": string | null,"device_id": string | null,"id": string,"revision": number,"submitted_at": string,"total_voters": number,"updated_at": string
+                    "booth_id": string,"comment": string | null,"device_id": string | null,"id": string,"revision": number,"submitted_at": string,"submitter_name": string | null,"submitter_phone": string | null,"total_voters": number,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "booth_id": string,"comment"?: string | null,"device_id"?: string | null,"id"?: string,"revision"?: number,"submitted_at"?: string,"total_voters": number,"updated_at"?: string
+                    "booth_id": string,"comment"?: string | null,"device_id"?: string | null,"id"?: string,"revision"?: number,"submitted_at"?: string,"submitter_name"?: string | null,"submitter_phone"?: string | null,"total_voters": number,"updated_at"?: string
                   }
                   Update: {
-                    "booth_id"?: string,"comment"?: string | null,"device_id"?: string | null,"id"?: string,"revision"?: number,"submitted_at"?: string,"total_voters"?: number,"updated_at"?: string
+                    "booth_id"?: string,"comment"?: string | null,"device_id"?: string | null,"id"?: string,"revision"?: number,"submitted_at"?: string,"submitter_name"?: string | null,"submitter_phone"?: string | null,"total_voters"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -149,9 +149,9 @@ isOneToOne: true
 { Args: { "p_rows": Json }; Returns: Json
                            },
 "submit_survey":
-{ Args: { "p_booth_id": string,"p_comment": string,"p_counts": Json,"p_total_voters": number }; Returns: string
-                           } |
 { Args: { "p_booth_id": string,"p_comment": string,"p_counts": Json,"p_device_id": string,"p_total_voters": number }; Returns: string
+                           } |
+{ Args: { "p_booth_id": string,"p_comment": string,"p_counts": Json,"p_device_id": string,"p_submitter_name": string,"p_submitter_phone": string,"p_total_voters": number }; Returns: string
                            }
           }
           Enums: {

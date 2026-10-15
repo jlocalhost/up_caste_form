@@ -1,6 +1,6 @@
 import { useEffect, useRef, type Dispatch } from "react";
 import { DRAFT_STORAGE_KEY } from "../constants";
-import type { SurveyAction, SurveyState } from "../state/survey-reducer";
+import { emptyDraft, initialRows, type SurveyAction, type SurveyState } from "../state/survey-reducer";
 import type { SurveyDraft } from "../types";
 
 function readDraft(): SurveyDraft | null {
@@ -14,10 +14,9 @@ function readDraft(): SurveyDraft | null {
   }
 }
 
-function writeDraft(draft: SurveyDraft | null) {
+function writeDraft(draft: SurveyDraft) {
   try {
-    if (draft) window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
-    else window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
   } catch {
     // Storage can be unavailable (private mode, quota) — the draft simply isn't kept.
   }
@@ -25,7 +24,8 @@ function writeDraft(draft: SurveyDraft | null) {
 
 /**
  * Keeps the in-progress form on the device so a refresh, a closed tab or a dropped
- * connection in the field doesn't lose the worker's entries. Cleared once submitted.
+ * connection in the field doesn't lose the worker's entries. Once submitted, only the
+ * worker's name and number are kept, ready for the next booth.
  */
 export function useDraftPersistence(state: SurveyState, dispatch: Dispatch<SurveyAction>) {
   const restored = useRef(false);
@@ -41,6 +41,6 @@ export function useDraftPersistence(state: SurveyState, dispatch: Dispatch<Surve
 
   useEffect(() => {
     if (!restored.current) return;
-    writeDraft(state.submitted ? null : state.draft);
+    writeDraft(state.submitted ? emptyDraft(initialRows(), state.draft) : state.draft);
   }, [state.draft, state.submitted]);
 }

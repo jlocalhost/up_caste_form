@@ -31,6 +31,7 @@ import CasteSection from "./CasteSection";
 import ExistingSubmissionNotice from "./ExistingSubmissionNotice";
 import LiveSummary from "./LiveSummary";
 import SubmissionSummary from "./SubmissionSummary";
+import SubmitterSection from "./SubmitterSection";
 import { IntroCard, OfflineBanner, SurveyHeader } from "./SurveyIntro";
 import ToastMessage from "./ToastMessage";
 
@@ -225,10 +226,19 @@ export default function SurveyForm({ districts, castes }: SurveyConfig) {
               coverage={coverage}
               rows={draft.rows}
               comment={draft.comment}
+              submitterName={draft.submitterName}
+              submitterPhone={draft.submitterPhone}
               onStartAnotherBooth={startAnotherBooth}
             />
           ) : (
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              <SubmitterSection
+                name={draft.submitterName}
+                phone={draft.submitterPhone}
+                errors={shownErrors}
+                onChange={(field, value) => dispatch({ type: "setSubmitter", field, value })}
+              />
+
               <AreaSection area={area} errors={shownErrors} onOpenPicker={setPicker} />
 
               {savedForBooth && savedForBooth.status !== "none" && <ExistingSubmissionNotice status={savedForBooth} />}

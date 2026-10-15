@@ -36,7 +36,7 @@ export default function CasteSection({
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="px-1">
-        <SectionTitle number="2" title="जातिवार अनुमान" subtitle="बूथ के अनुमानित सामाजिक समूह दर्ज करें" />
+        <SectionTitle number="3" title="जातिवार अनुमान" subtitle="बूथ के अनुमानित सामाजिक समूह दर्ज करें" />
       </div>
       <div className="space-y-3">
         {rows.map((row, index) => (

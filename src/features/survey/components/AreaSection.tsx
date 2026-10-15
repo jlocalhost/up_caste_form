@@ -21,7 +21,7 @@ export default function AreaSection({
 }: Props) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <SectionTitle number="1" title="क्षेत्र का विवरण" subtitle="पहले जिला, विधानसभा और बूथ चुनें" />
+      <SectionTitle number="2" title="क्षेत्र का विवरण" subtitle="पहले जिला, विधानसभा और बूथ चुनें" />
       <div className="space-y-4">
         <Field label="जिला" required error={errors.district}>
           {(control) => (
